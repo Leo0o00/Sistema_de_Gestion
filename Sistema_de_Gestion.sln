@@ -3,7 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sistema_de_Gestion", "Sistema_de_Gestion\Sistema_de_Gestion.csproj", "{76A3F304-4DD8-470F-94F7-59A8EB5D0F51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Coworking.WebApi", "Coworking.WebApi\Coworking.WebApi.csproj", "{76A3F304-4DD8-470F-94F7-59A8EB5D0F51}"
+	ProjectSection(ProjectDependencies) = postProject
+		{11F05190-AF6D-4F67-ABAE-497CA80AD5E0} = {11F05190-AF6D-4F67-ABAE-497CA80AD5E0}
+		{A131388F-0854-4349-B3ED-E830B83251F2} = {A131388F-0854-4349-B3ED-E830B83251F2}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Coworking.Domain", "Coworking.Domain\Coworking.Domain.csproj", "{11F05190-AF6D-4F67-ABAE-497CA80AD5E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Coworking.Infrastructure", "Coworking.Infrastructure\Coworking.Infrastructure.csproj", "{0AA06CC3-D8CE-4850-9924-5B4E440E634E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Coworking.Application", "Coworking.Application\Coworking.Application.csproj", "{A131388F-0854-4349-B3ED-E830B83251F2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0AA06CC3-D8CE-4850-9924-5B4E440E634E} = {0AA06CC3-D8CE-4850-9924-5B4E440E634E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +28,18 @@ Global
 		{76A3F304-4DD8-470F-94F7-59A8EB5D0F51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76A3F304-4DD8-470F-94F7-59A8EB5D0F51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76A3F304-4DD8-470F-94F7-59A8EB5D0F51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11F05190-AF6D-4F67-ABAE-497CA80AD5E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11F05190-AF6D-4F67-ABAE-497CA80AD5E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11F05190-AF6D-4F67-ABAE-497CA80AD5E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11F05190-AF6D-4F67-ABAE-497CA80AD5E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AA06CC3-D8CE-4850-9924-5B4E440E634E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AA06CC3-D8CE-4850-9924-5B4E440E634E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AA06CC3-D8CE-4850-9924-5B4E440E634E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AA06CC3-D8CE-4850-9924-5B4E440E634E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A131388F-0854-4349-B3ED-E830B83251F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A131388F-0854-4349-B3ED-E830B83251F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A131388F-0854-4349-B3ED-E830B83251F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A131388F-0854-4349-B3ED-E830B83251F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

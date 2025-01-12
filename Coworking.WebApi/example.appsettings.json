@@ -1,0 +1,15 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=hostname;Port=port;Username=username;Password=password;Database=database_name"
+  },
+  "Jwt": {
+    "Key": "MyJWTKey"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  }
+}

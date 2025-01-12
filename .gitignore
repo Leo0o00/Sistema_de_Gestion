@@ -5,6 +5,7 @@
 
 /Coworking.WebApi/appsettings.json
 /.idea
+
 # User-specific files
 *.rsuser
 *.suo
