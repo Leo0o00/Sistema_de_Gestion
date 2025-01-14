@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Coworking.Application.Rooms.Queries;
+namespace Coworking.Infrastructure.Queries.Rooms;
 public record GetAvailableRoomsQuery(int? Capacity, string? Location) : IRequest<List<Domain.Entities.Rooms>>;
 
 

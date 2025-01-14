@@ -30,12 +30,16 @@ public class CoworkingDbContext : DbContext
             .HasMany(r => r.Reservations)
             .WithOne(res => res.Room)
             .HasForeignKey(res => res.RoomId);
-
-        // Indice único para Username
-        modelBuilder.Entity<Users>()
-            .HasIndex(u => u.Username)
+        // Indice unico para Room => Name
+        modelBuilder.Entity<Rooms>()
+            .HasIndex(r => r.Name)
             .IsUnique();
 
+        // Indice único para Username y para Email
+        modelBuilder.Entity<Users>()
+            .HasIndex(u => new { u.Username, u.Email })
+            .IsUnique();
+        
         // Reservation -> ReservationAuditLog (1 a muchos)
         modelBuilder.Entity<Reservations>()
             .HasMany(r => r.AuditLogs)

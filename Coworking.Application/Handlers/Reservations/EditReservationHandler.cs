@@ -1,8 +1,9 @@
 ﻿using Coworking.Infrastructure;
+using Coworking.Infrastructure.Commands.Reservations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Coworking.Application.Reservations.Commands;
+namespace Coworking.Application.Handlers.Reservations;
 
 public class EditReservationHandler : IRequestHandler<EditReservationCommand, bool>
 {
@@ -19,14 +20,14 @@ public class EditReservationHandler : IRequestHandler<EditReservationCommand, bo
             .Include(r => r.AuditLogs)
             .FirstOrDefaultAsync(r => r.Id == request.ReservationId, cancellationToken);
 
-        if (reservation == null || reservation.IsCanceled)
+        if (reservation == null || reservation.IsCancelled)
             throw new InvalidOperationException("The reservation does not exist or is cancelled.");
 
         // Validar solapamiento
         bool overlap = await _context.Reservations.AnyAsync(r =>
                 r.Id != request.ReservationId &&
                 r.RoomId == reservation.RoomId &&
-                !r.IsCanceled &&
+                !r.IsCancelled &&
                 (
                     (request.StartTime >= r.StartTime && request.StartTime < r.EndTime) ||
                     (request.EndTime > r.StartTime && request.EndTime <= r.EndTime)

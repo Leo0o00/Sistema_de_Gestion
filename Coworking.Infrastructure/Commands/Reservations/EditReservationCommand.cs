@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Coworking.Application.Reservations.Commands;
+namespace Coworking.Infrastructure.Commands.Reservations;
 
 public record EditReservationCommand(
     int ReservationId,

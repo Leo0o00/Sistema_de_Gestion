@@ -1,8 +1,9 @@
-﻿using MediatR;
-using Coworking.Infrastructure;
+﻿using Coworking.Infrastructure;
+using Coworking.Infrastructure.Queries.Rooms;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Coworking.Application.Rooms.Queries;
+namespace Coworking.Application.Handlers.Rooms;
 
     public class GetAvailableRoomsHandler : IRequestHandler<GetAvailableRoomsQuery, List<Domain.Entities.Rooms>>
     {

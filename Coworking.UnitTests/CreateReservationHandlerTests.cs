@@ -1,14 +1,15 @@
-﻿
-using Xunit;
-using Coworking.Application.Reservations.Commands;
-using Coworking.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+﻿using Xunit;
 using System;
 using System.Threading.Tasks;
+using Coworking.Application.Handlers.Reservations;
+using Microsoft.EntityFrameworkCore;
+using Coworking.Infrastructure;
 using Coworking.Domain.Entities;
+using Coworking.Infrastructure.Commands.Reservations;
 
 namespace Coworking.UnitTests;
 
+    
 public class CreateReservationHandlerTests
 {
     [Fact]
@@ -19,11 +20,11 @@ public class CreateReservationHandlerTests
             .UseInMemoryDatabase(databaseName: "TestDB_Overlap")
             .Options;
 
-        using var context = new CoworkingDbContext(options);
+        await using var context = new CoworkingDbContext(options);
 
         // Crear reserva preexistente
-        context.Rooms.Add(new Room { Id = 1, Name = "RoomTest", Capacity = 10 });
-        context.Reservations.Add(new Reservation
+        context.Rooms.Add(new Rooms { Id = 1, Name = "RoomTest", Capacity = 10 });
+        context.Reservations.Add(new Reservations
         {
             Id = 100,
             RoomId = 1,
@@ -46,3 +47,4 @@ public class CreateReservationHandlerTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(command, default));
     }
 }
+

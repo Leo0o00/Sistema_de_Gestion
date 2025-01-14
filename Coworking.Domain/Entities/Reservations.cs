@@ -17,7 +17,7 @@ public class Reservations
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-    public bool IsCanceled { get; set; }
+    public bool IsCancelled { get; set; }
     
     //Auditoria de cambios
     public ICollection<ReservationAuditLog> AuditLogs { get; set; } = new List<ReservationAuditLog>();

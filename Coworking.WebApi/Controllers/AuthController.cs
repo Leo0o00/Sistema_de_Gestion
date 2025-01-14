@@ -1,76 +1,85 @@
-﻿
+﻿using Coworking.Application.DTOs;
+using Coworking.Infrastructure.Commands.Users;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Coworking.Infrastructure;
-using Coworking.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
-
 
 namespace Sistema_de_Gestion.Controllers;
-
 
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly CoworkingDbContext _db;
-    private readonly IConfiguration _config;
+    private readonly IMediator _mediator;
 
-    public AuthController(CoworkingDbContext db, IConfiguration config)
+    public AuthController(IMediator mediator)
     {
-        _db = db;
-        _config = config;
+        _mediator = mediator;
     }
+
+    
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] Users user)
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
     {
-        // Se valida si ya existe ese username
-        bool userExists = await _db.Users.AnyAsync(u => u.Username == user.Username);
-        if (userExists)
-            return BadRequest("El usuario ya existe.");
+        
+        var command = new RegisterUserCommand(
+            Username: request.Username,
+            Email: request.Email,
+            Password: request.Password
+        );
 
-        // Se hashea el password con BCrypt
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-        await _db.Users.AddAsync(user);
-        await _db.SaveChangesAsync();
-
-        return Ok("Usuario registrado con éxito.");
+        try
+        {
+            var newUserId = await _mediator.Send(command);
+            return Ok(new { Message = "User registered successfully.", UserId = newUserId });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
+    
+
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] Users loginData)
+    public async Task<IActionResult> Login([FromBody] LoginUserDto request)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == loginData.Username);
-        if (user == null)
-            return Unauthorized("User not found.");
+        
+        var command = new LoginUserCommand(
+            Username: request.Username,
+            Password: request.Password
+        );
 
-        bool validPassword = BCrypt.Net.BCrypt.Verify(loginData.Password, user.Password);
-        if (!validPassword)
-            return Unauthorized("Incorrect Password.");
-
-        // Se genera el token JWT
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
-        var tokenDescriptor = new SecurityTokenDescriptor
+        try
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role)
-            }),
-            Expires = DateTime.UtcNow.AddHours(4),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature
-            )
-        };
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        var jwt = tokenHandler.WriteToken(token);
-
-        return Ok(new { token = jwt, role = user.Role });
+            string token = await _mediator.Send(command);
+            return Ok(new { token });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{userId}")]
+    public async Task<IActionResult> ChangeRole(int userId, [FromBody] ChangeRoleDto request)
+    {
+        var command = new ChangeUserRoleCommand(userId, request.NewRole);
+        try
+        {
+            bool result = await _mediator.Send(command);
+            if (result) return Ok("Role successfully updated.");
+            return BadRequest("The role could not be updated.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

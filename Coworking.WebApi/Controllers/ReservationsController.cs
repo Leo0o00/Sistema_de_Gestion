@@ -1,8 +1,9 @@
-﻿namespace Sistema_de_Gestion.Controllers;
+﻿using Coworking.Infrastructure.Commands.Reservations;
+
+namespace Sistema_de_Gestion.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using Coworking.Application.Reservations.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Coworking.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ public class ReservationsController : ControllerBase
     [Authorize] // Cualquier usuario logueado
     public async Task<IActionResult> GetMyReservations()
     {
-        // Extraer userId del token JWT
+        // Extrae userId del token JWT
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized("UserId no encontrado en token.");
 
@@ -32,7 +33,7 @@ public class ReservationsController : ControllerBase
 
         var reservations = await _db.Reservations
             .Include(r => r.Room)
-            .Where(r => r.UserId == userId && !r.IsCanceled)
+            .Where(r => r.UserId == userId && !r.IsCancelled)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 

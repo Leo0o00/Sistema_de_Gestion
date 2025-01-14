@@ -1,8 +1,9 @@
 ﻿using Coworking.Infrastructure;
+using Coworking.Infrastructure.Commands.Reservations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Coworking.Application.Reservations.Commands;
+namespace Coworking.Application.Handlers.Reservations;
 
 public class CancelReservationHandler : IRequestHandler<CancelReservationCommand, bool>
 {
@@ -19,10 +20,10 @@ public class CancelReservationHandler : IRequestHandler<CancelReservationCommand
             .Include(r => r.AuditLogs)
             .FirstOrDefaultAsync(r => r.Id == request.ReservationId, cancellationToken);
 
-        if (reservation == null || reservation.IsCanceled)
+        if (reservation == null || reservation.IsCancelled)
             throw new InvalidOperationException("The reservation does not exist or is already cancelled.");
 
-        reservation.IsCanceled = true;
+        reservation.IsCancelled = true;
         reservation.UpdatedAt = DateTime.UtcNow;
 
         // Auditoría

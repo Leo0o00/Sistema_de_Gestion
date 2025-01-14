@@ -8,9 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="MediatR" Version="12.4.1" />
-        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
@@ -23,7 +24,16 @@
     <ItemGroup>
       <ProjectReference Include="..\Coworking.Domain\Coworking.Domain.csproj" />
       <ProjectReference Include="..\Coworking.Infrastructure\Coworking.Infrastructure.csproj" />
+
+
+
     </ItemGroup>
+
+
+
+
+
+
 
 
 

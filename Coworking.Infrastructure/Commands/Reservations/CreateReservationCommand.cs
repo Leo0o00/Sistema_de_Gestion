@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Coworking.Application.Reservations.Commands;
+namespace Coworking.Infrastructure.Commands.Reservations;
 
 
     public record CreateReservationCommand(
@@ -8,4 +8,4 @@ namespace Coworking.Application.Reservations.Commands;
         int RoomId,
         DateTime StartTime,
         DateTime EndTime
-    ) : IRequest<int>;
+    ) : IRequest<Domain.Entities.Reservations>;
