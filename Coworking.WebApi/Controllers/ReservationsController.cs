@@ -1,4 +1,7 @@
-﻿using Coworking.Infrastructure.Commands.Reservations;
+﻿using System.Security.Claims;
+using Coworking.Application.DTOs.Reservations;
+using Coworking.Infrastructure.Commands.Reservations;
+using Coworking.Infrastructure.Queries.Reservations;
 
 namespace Sistema_de_Gestion.Controllers;
 
@@ -13,49 +16,67 @@ using Microsoft.EntityFrameworkCore;
 public class ReservationsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly CoworkingDbContext _db;
 
-    public ReservationsController(IMediator mediator, CoworkingDbContext db)
+    public ReservationsController(IMediator mediator)
     {
         _mediator = mediator;
-        _db = db;
     }
 
     [HttpGet]
     [Authorize] // Cualquier usuario logueado
     public async Task<IActionResult> GetMyReservations()
     {
-        // Extrae userId del token JWT
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) return Unauthorized("UserId no encontrado en token.");
+        // Extraer userId y role
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
+
+        if (userIdClaim == null || roleClaim == null)
+            return Unauthorized("Your identity could not be determined.");
 
         int userId = int.Parse(userIdClaim.Value);
+        string role = roleClaim.Value;
 
-        var reservations = await _db.Reservations
-            .Include(r => r.Room)
-            .Where(r => r.UserId == userId && !r.IsCancelled)
-            .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
-
-        return Ok(reservations);
+        var query = new GetAllReservationsQuery(userId, role);
+        var reservations = await _mediator.Send(query);
+        var response = reservations.Select(r => new ReservationDto
+        {
+            Id = r.Id,
+            UserId = r.UserId,
+            RoomId = r.RoomId,
+            StartTime = r.StartTime,
+            EndTime = r.EndTime,
+            IsCancelled = r.IsCancelled
+        }).ToList();
+        
+        return Ok(response);
     }
 
     [HttpPost]
     [Authorize] // Se requiere inicio de sesión
-    public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand command)
+    public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand request)
     {
-        // Asegurarnos de que el UserId del command coincide con el del token
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) return Unauthorized("UserId no encontrado en token.");
+        // Asegurarnos de que el UserId del request coincide con el del token
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
+
+        if (userIdClaim == null || roleClaim == null)
+            return Unauthorized("Your identity could not be determined.");
 
         int userId = int.Parse(userIdClaim.Value);
-        if (command.UserId != userId)
-            return BadRequest("No puedes crear una reserva para otro usuario.");
+        
+        if (request.UserId != userId)
+            return BadRequest("You cannot create a reservation for another user.");
+
+        var command = new CreateReservationCommand(
+            request.UserId,
+            request.RoomId,
+            request.StartTime,
+            request.EndTime);
 
         try
         {
-            var reservationId = await _mediator.Send(command);
-            return Ok(new { reservationId });
+            await _mediator.Send(command);
+            return Ok("Reservation created successfully.");
         }
         catch (InvalidOperationException ex)
         {
@@ -65,62 +86,105 @@ public class ReservationsController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize]
-    public async Task<IActionResult> EditReservation(int id, [FromBody] EditReservationCommand command)
+    public async Task<IActionResult> EditReservation(int id, [FromBody] UpdateReservationDto request)
     {
         // Validar que la reserva sea del usuario que la creó (o Admin)
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
 
-        if (userIdClaim == null) return Unauthorized("UserId no encontrado en token.");
+        if (userIdClaim == null || roleClaim == null) return Unauthorized("Your identity could not be determined.");
         
         int userId = int.Parse(userIdClaim.Value);
-        bool isAdmin = (roleClaim != null && roleClaim.Value == "Admin");
-
-        // Verificar que la reserva existe y pertenece al userId o el user es admin
-        var reservation = await _db.Reservations.FindAsync(id);
-        if (reservation == null) return NotFound("Reserva no encontrada.");
-        if (reservation.UserId != userId && !isAdmin)
-            return Forbid("No tienes permiso para editar esta reserva.");
-
-        // Reemplazar ReservationId en el command
-        command = command with { ReservationId = id };
+        string role = roleClaim.Value;
+        
+        var command = new EditReservationCommand(
+            ReservationId: id,
+            StartTime: request.StartTime,
+            EndTime: request.EndTime,
+            UserId: userId,
+            Role: role
+        );
 
         try
         {
             bool result = await _mediator.Send(command);
-            return result ? Ok("Reserva editada con éxito.") : BadRequest("No se pudo editar la reserva.");
+            if (result) return Ok("Reservation edited successfully.");
+            return BadRequest("The reservation could not be edited.");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    [HttpDelete("{id}")]
+    [HttpPatch("{id}/cancel")]
     [Authorize]
     public async Task<IActionResult> CancelReservation(int id)
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role);
-
-        if (userIdClaim == null) return Unauthorized("UserId no encontrado en token.");
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
+        if (userIdClaim == null || roleClaim == null)
+            return Unauthorized("Your identity could not be determined.");
 
         int userId = int.Parse(userIdClaim.Value);
-        bool isAdmin = (roleClaim != null && roleClaim.Value == "Admin");
+        string role = roleClaim.Value;
 
-        var reservation = await _db.Reservations.FindAsync(id);
-        if (reservation == null) return NotFound("Reserva no encontrada.");
-        if (reservation.UserId != userId && !isAdmin)
-            return Forbid("No tienes permiso para cancelar esta reserva.");
+        var command = new CancelReservationCommand(
+            ReservationId: id,
+            UserId: userId,
+            Role: role
+        );
 
-        // MediatR command
-        var command = new CancelReservationCommand(id);
         try
         {
             bool result = await _mediator.Send(command);
-            return result ? Ok("Reserva cancelada con éxito.") : BadRequest("No se pudo cancelar la reserva.");
+            if (result) return Ok("Reservation cancelled successfully.");
+            return BadRequest("The reservation could not be cancelled.");
         }
-        catch (InvalidOperationException ex)
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    // Eliminar físicamente (solo Admin)
+    [HttpDelete("{id}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> DeleteReservation(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
+        if (userIdClaim == null || roleClaim == null)
+            return Unauthorized("Your identity could not be determined.");
+
+        int userId = int.Parse(userIdClaim.Value);
+        string role = roleClaim.Value;
+
+        var command = new DeleteReservationCommand(id, userId, role);
+
+        try
+        {
+            bool result = await _mediator.Send(command);
+            if (result) return Ok("Reservation successfully removed.");
+            return BadRequest("The reservation could not be removed.");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }

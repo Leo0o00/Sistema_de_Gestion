@@ -1,6 +1,7 @@
 ﻿using Coworking.Domain.Entities;
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Commands.Reservations;
+using Coworking.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,25 +9,17 @@ namespace Coworking.Application.Handlers.Reservations;
 
 public class CreateReservationHandler : IRequestHandler<CreateReservationCommand, Domain.Entities.Reservations>
 {
-    private readonly CoworkingDbContext _context;
+    private readonly IReservationsRepository _service;
 
-    public CreateReservationHandler(CoworkingDbContext context)
+    public CreateReservationHandler(IReservationsRepository service)
     {
-        _context = context;
+        _service = service;
     }
 
     public async Task<Domain.Entities.Reservations> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
         // Validar solapamiento de reservas
-        bool overlap = await _context.Reservations.AnyAsync(r =>
-                r.RoomId == request.RoomId &&
-                !r.IsCancelled &&
-                (
-                    (request.StartTime >= r.StartTime && request.StartTime < r.EndTime) ||
-                    (request.EndTime > r.StartTime && request.EndTime <= r.EndTime)
-                ),
-            cancellationToken
-        );
+        bool overlap = await _service.FindOverlap(request.RoomId, request.StartTime, request.EndTime, cancellationToken);
 
         if (overlap)
             throw new InvalidOperationException("The room is already booked at that time.");
@@ -39,7 +32,7 @@ public class CreateReservationHandler : IRequestHandler<CreateReservationCommand
             EndTime = request.EndTime
         };
 
-        _context.Reservations.Add(reservation);
+        await _service.AddAsync(reservation);
 
         // Auditoría
         reservation.AuditLogs.Add(new ReservationAuditLog
@@ -48,7 +41,7 @@ public class CreateReservationHandler : IRequestHandler<CreateReservationCommand
             Details = $"Reservation created by user {request.UserId} for room {request.RoomId}."
         });
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _service.SaveChangesAsync(cancellationToken);
 
         return new Domain.Entities.Reservations
         {

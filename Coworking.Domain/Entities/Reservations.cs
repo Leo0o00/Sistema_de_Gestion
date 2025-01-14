@@ -20,6 +20,6 @@ public class Reservations
     public bool IsCancelled { get; set; }
     
     //Auditoria de cambios
-    public ICollection<ReservationAuditLog> AuditLogs { get; set; } = new List<ReservationAuditLog>();
+    public virtual ICollection<ReservationAuditLog> AuditLogs { get; set; } = new List<ReservationAuditLog>();
     
 }

@@ -1,40 +1,30 @@
 ﻿using Coworking.Domain.Entities;
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Queries.Reservations;
+using Coworking.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Coworking.Application.Handlers.Reservations;
 
-public class GetAllReservationsHandler : IRequestHandler<GetAllReservationsQuery, IEnumerable<Domain.Entities.Reservations>>
+public class GetAllReservationsHandler : IRequestHandler<GetAllReservationsQuery, List<Domain.Entities.Reservations>>
 {
-    private readonly CoworkingDbContext _dbContext;
+    private readonly IReservationsRepository _service;
     
-    public GetAllReservationsHandler(CoworkingDbContext dbContext)
+    public GetAllReservationsHandler(IReservationsRepository service)
     {
-        _dbContext = dbContext;
+        _service = service;
     }
     
-    public async Task<IEnumerable<Domain.Entities.Reservations>> Handle(GetAllReservationsQuery request, CancellationToken cancellationToken)
+    public async Task<List<Domain.Entities.Reservations>> Handle(GetAllReservationsQuery request, CancellationToken cancellationToken)
     {
-        var reservations = await _dbContext.Reservations.Include(reservations => reservations.Room)
-            .Include(reservations => reservations.User).ToListAsync(cancellationToken);
-        return reservations.Select(reservation => new Domain.Entities.Reservations
+        // Si es admin, retornamos todas
+        if (request.Role == "Admin")
         {
-            Id = reservation.Id,
-            Room = new Domain.Entities.Rooms
-            {
-                Name = reservation.Room.Name,
-                Location = reservation.Room.Location
-            },
-            User = new Domain.Entities.Users
-            {
-                Username = reservation.User.Username,
-                Email = reservation.User.Email
-            },
-            StartTime = reservation.StartTime,
-            EndTime = reservation.EndTime,
-            IsCancelled = reservation.IsCancelled
-        });
+            return await _service.GetAllAsync();
+        }
+        // Si es user, retornamos solo sus reservas
+        return await _service.GetByUserIdAsync(request.UserId);
+
     }
 }

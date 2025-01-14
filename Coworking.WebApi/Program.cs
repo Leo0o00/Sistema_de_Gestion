@@ -31,6 +31,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CancelReservationHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(CreateReservationCommand).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(CreateReservationHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(DeleteReservationCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(DeleteReservationHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(EditReservationCommand).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(EditReservationHandler).Assembly);
     //Rooms
@@ -58,7 +60,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(GetAllRoomsQuery).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(GetAllRoomsHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(GetAvailableRoomsQuery).Assembly);
-    cfg.RegisterServicesFromAssembly(typeof(GetAvailableRoomsHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(GetAvailableRoomsCachedHandler).Assembly); //Request cacheada en memoria
     cfg.RegisterServicesFromAssembly(typeof(GetRoomByIdQuery).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(GetRoomByIdHandler).Assembly);
     
@@ -97,9 +99,9 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddMemoryCache();
 
 // 6. Registra los servicios de correo, repositorios, etc.
+builder.Services.AddScoped<IReservationsRepository, ReservationsRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IUsersRepository, UserRepository>();
-// builder.Services.AddScoped<IEmailService, EmailService>();
 // builder.Services.AddScoped<IEmailService, EmailService>();
 
 

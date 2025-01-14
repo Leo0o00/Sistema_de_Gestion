@@ -2,7 +2,7 @@
 
 namespace Coworking.Infrastructure.Commands.Reservations;
 
-public record CancelReservationCommand(
+public record DeleteReservationCommand(
     int ReservationId,
     int UserId,
     string Role

@@ -2,4 +2,4 @@
 
 namespace Coworking.Infrastructure.Queries.Reservations;
 
-public record GetAllReservationsQuery : IRequest<IEnumerable<Domain.Entities.Reservations>>;
+public record GetAllReservationsQuery(int UserId, string Role) : IRequest<List<Domain.Entities.Reservations>>;

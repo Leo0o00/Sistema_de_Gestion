@@ -7,7 +7,7 @@ public class Rooms
         public int Capacity { get; set; }
         public bool IsActive { get; set; }
 
-        public ICollection<Reservations> Reservations { get; set; } = new List<Reservations>();
+        public virtual ICollection<Reservations> Reservations { get; set; } = new List<Reservations>();
 }
     
 

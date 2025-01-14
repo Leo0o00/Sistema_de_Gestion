@@ -12,7 +12,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
-        <PackageReference Include="Microsoft.TestPlatform" Version="17.9.0" />
+        <PackageReference Include="Microsoft.TestPlatform" Version="17.12.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
         <PackageReference Include="xunit.v3" Version="1.0.1" />
@@ -26,6 +26,7 @@
       <ProjectReference Include="..\Coworking.Application\Coworking.Application.csproj" />
       <ProjectReference Include="..\Coworking.Domain\Coworking.Domain.csproj" />
       <ProjectReference Include="..\Coworking.Infrastructure\Coworking.Infrastructure.csproj" />
+      <ProjectReference Include="..\Coworking.WebApi\Coworking.WebApi.csproj" />
     </ItemGroup>
     
 </Project>
