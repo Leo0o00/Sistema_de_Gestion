@@ -2,24 +2,27 @@
 using Coworking.Application.DTOs.Reservations;
 using Coworking.Infrastructure.Commands.Reservations;
 using Coworking.Infrastructure.Queries.Reservations;
-
-namespace Sistema_de_Gestion.Controllers;
-
+using Coworking.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Coworking.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
+namespace Sistema_de_Gestion.Controllers;
+
+
 [ApiController]
 [Route("api/[controller]")]
 public class ReservationsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IEmailService _emailService;
 
-    public ReservationsController(IMediator mediator)
+    public ReservationsController(IMediator mediator, IEmailService emailService)
     {
         _mediator = mediator;
+        _emailService = emailService;
     }
 
     [HttpGet]

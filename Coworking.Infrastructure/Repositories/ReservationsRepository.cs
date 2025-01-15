@@ -18,6 +18,9 @@ public interface IReservationsRepository
         
     // (Opcional) Listar por usuario
     Task<List<Reservations>> GetByUserIdAsync(int userId);
+    
+    Task<Rooms?> GetRoomDetailsAsync(int roomId);
+    Task<Users?> GetUserDetailsAsync(int userId);
         
     // Actualizar
     Task UpdateAsync(Reservations reservation);
@@ -77,6 +80,18 @@ public class ReservationsRepository : IReservationsRepository
             .ToListAsync();
     }
 
+    public async Task<Rooms?> GetRoomDetailsAsync(int roomId)
+    {
+        return await _context.Rooms
+            .FirstOrDefaultAsync(r => r.Id == roomId);
+    }
+
+    public async Task<Users?> GetUserDetailsAsync(int userId)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
+    
     public Task UpdateAsync(Reservations reservation)
     {
         _context.Reservations.Update(reservation);

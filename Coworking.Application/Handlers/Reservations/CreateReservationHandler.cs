@@ -2,6 +2,7 @@
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Commands.Reservations;
 using Coworking.Infrastructure.Repositories;
+using Coworking.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +11,12 @@ namespace Coworking.Application.Handlers.Reservations;
 public class CreateReservationHandler : IRequestHandler<CreateReservationCommand, Domain.Entities.Reservations>
 {
     private readonly IReservationsRepository _service;
+    private readonly IEmailService _emailService;
 
-    public CreateReservationHandler(IReservationsRepository service)
+    public CreateReservationHandler(IReservationsRepository service, IEmailService emailService)
     {
         _service = service;
+        _emailService = emailService;
     }
 
     public async Task<Domain.Entities.Reservations> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,16 @@ public class CreateReservationHandler : IRequestHandler<CreateReservationCommand
         });
 
         await _service.SaveChangesAsync(cancellationToken);
+        
+        // Se obtienen los detalles de la reserva para el correo
+        var room = await _service.GetRoomDetailsAsync(reservation.RoomId);
+        var user = await _service.GetUserDetailsAsync(reservation.UserId);
+        
+        string reservationDetails = $"Sala: {room.Name}\nUbicación: {room.Location}\nHora de inicio: {reservation.StartTime}\nHora de fin: {reservation.EndTime}";
+
+        // Enviar correo de confirmación
+        await _emailService.SendReservationConfirmationAsync(user.Email, reservationDetails);
+        
 
         return new Domain.Entities.Reservations
         {
